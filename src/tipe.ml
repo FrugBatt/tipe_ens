@@ -38,47 +38,58 @@ Array.iter (fun t -> Array.iter (fun b -> if b then print_string "1 - " else pri
 
 
 (* Barabasi-Albert algorithm *)
-let full_graph n m =
-  let g = Array.make_matrix n n false in
-  for i = 0 to (m-1) do
-    for j = 0 to (m-1) do
-      if i <> j then g.(i).(j) <- true
-    done;
-  done;
-  (g : graphe)
-;;
-
-module Int_set = Set.Make(Int);;
-
-let pick_distincts tab m =
-  let n = Array.length tab in
-  let rec aux s = function
-    | k when k=m -> s
-    | _ -> let i = Random.int n in
-      let ns = Int_set.add tab.(i) s in aux ns (Int_set.cardinal ns)
-  in aux (Int_set.empty) 0
-;;
-
-let algorithm_barabasi_albert n m m0 =
-  let g = full_graph n m0 and deg = Array.init (m0 * (m0-1)) (fun i -> i / m0) in
-  let rec aux deg = function
-    | k when k = n -> g
-    | k -> let nodes = pick_distincts deg m and nm = Array.make m k in
-    Int_set.iter (fun i -> g.(k).(i) <- true; g.(i).(k) <- true) nodes;
-      aux (Array.concat [deg; Array.of_seq (Int_set.to_seq nodes); nm]) (k+1)
-  in aux deg m0
-;;
-
-let print_graph (g : graphe) =
+(* let full_graph n m = *)
+(*   let g = Array.make_matrix n n false in *)
+(*   for i = 0 to (m-1) do *)
+(*     for j = 0 to (m-1) do *)
+(*       if i <> j then g.(i).(j) <- true *)
+(*     done; *)
+(*   done; *)
+(*   (g : graphe) *)
+(* ;; *)
+(* *)
+(* module Int_set = Set.Make(Int);; *)
+(**)
+(* let pick_distincts tab m = *)
+(*   let n = Array.length tab in *)
+(*   let rec aux s = function *)
+(*     | k when k=m -> s *)
+(*     | _ -> let i = Random.int n in *)
+(*       let ns = Int_set.add tab.(i) s in aux ns (Int_set.cardinal ns) *)
+(*   in aux (Int_set.empty) 0 *)
+(* ;; *)
+(* *)
+(* let algorithm_barabasi_albert n m m0 = *)
+(*   let g = full_graph n m0 and deg = Array.init (m0 * (m0-1)) (fun i -> i / m0) in *)
+(*   let rec aux deg = function *)
+(*     | k when k = n -> g *)
+(*     | k -> let nodes = pick_distincts deg m and nm = Array.make m k in *)
+(*     Int_set.iter (fun i -> g.(k).(i) <- true; g.(i).(k) <- true) nodes; *)
+(*       aux (Array.concat [deg; Array.of_seq (Int_set.to_seq nodes); nm]) (k+1) *)
+(*   in aux deg m0 *)
+(* ;; *)
+(* *)
+(* let print_graph (g : graphe) = *)
+(*   let n = Array.length g in *)
+(*   for i = 0 to (n-1) do *)
+(*     printf "["; *)
+(*     for j = 0 to (n-1) do *)
+(*       if g.(i).(j) then printf "%d, " j *)
+(*     done; *)
+(*     printf "],\n" *)
+(*   done; *)
+(* ;; *)
+let print_graph_degree (g : graphe) =
   let n = Array.length g in
   for i = 0 to (n-1) do
-    printf "[";
+    let r = ref 0 in
     for j = 0 to (n-1) do
-      if g.(i).(j) then printf "%d, " j
+      if g.(i).(j) then incr r
     done;
-    printf "],\n"
+    printf "%d," !r
   done;
 ;;
+
 
 (* Optimized algorithm *)
 let algorithm_3 (k : (unit -> int) array) =
@@ -99,18 +110,10 @@ let algorithm_3 (k : (unit -> int) array) =
     List.iter (fun i -> ajout i f2) !connected;
     if node.deg > 0 then ajout node f2
   done;
+  if f2.length > 0 then printf "Graphe invalid: %d" f2.length;
   (g : graphe)
 ;;
 
-let k0 () = 2;;
-let k1 () = 4;;
-let k2 () = 3;;
-let k3 () = 1;;
-let k4 () = 7;;
-let k5 () = 3;;
-let k6 () = 1;;
-let k7 () = 2;;
-let k8 () = 2;;
-let k9 () = 1;;
-let k = [|k0;k1;k2;k3;k4;k5;k6;k7;k8;k9|];;
-print_graph (algorithm_3 k);;
+let k () = 1+(Random.int 998);;
+let tab_k = Array.make 1000 k;;
+print_graph_degree (algorithm_3 tab_k);;
