@@ -89,6 +89,7 @@ let print_graph_degree (g : graphe) =
     done;
     printf "%d," !r
   done;
+  print_newline ()
 ;;
 
 
@@ -99,7 +100,7 @@ let take_last tab i =
   else tab.(i)
 ;;
 
-(* Erdos Gallai check *)
+(* (* Erdos Gallai check *) *)
 let erdos_gallai (k : int array) =
   let n = Array.length k and tab = Array.of_list (tri_fusion (Array.to_list k)) in
   let up_sum = Array.make (n+1) 0 and down_sum = Array.make (n+2) [||] in
@@ -155,27 +156,43 @@ let algorithm_3 (k : (unit -> int) array) =
   let nodes_tab = Array.init n (fun i -> {deg= degs.(i); value= i}) in
   let f1 = cree_tas nodes_tab in
   while f1.length > 0 do
-    let node = retrait f1 and connection = ref false and connected = ref [] in
-    while node.deg > 0 && f1.length > 0 && not !connection do
+    let node = retrait f1 and connected = ref [] in
+    while node.deg > 0 && f1.length > 0 do
       let connect = retrait f1 in
-      if not g.(node.value).(connect.value) then begin
         g.(node.value).(connect.value) <- true;
         g.(connect.value).(node.value) <- true;
         node.deg <- node.deg - 1;
         connect.deg <- connect.deg - 1;
-        connection := true;
         (* printf "Connection %d:%d -- %d:%d\n" node.value node.deg connect.value connect.deg; *)
-      end;
-      if connect.deg > 0 then connected := connect::!connected
+        if connect.deg > 0 then connected := connect::!connected
     done;
     (* if node.deg > 0 && f1.length = 0 then print_tab f1.content; printf "Length : %d\n" (List.length !connected); *)
-    if node.deg > 0 && f1.length = 0 then failwith "Graph invalid";
-    if node.deg > 0 then connected := node::!connected;
+    if node.deg > 0 then failwith "Graph invalid";
     List.iter (fun i -> ajout i f1) !connected;
   done;
   (g : graphe)
 ;;
 
+let havel_hakimi (k : (unit -> int) array) =
+  let n = Array.length k and degs = tri_fusion (Array.to_list (Array.map (fun k_i -> k_i ()) k)) in
+  let nodes = List.mapi (fun i d -> {value= i; deg= d}) degs in
+  let g = Array.make_matrix n n false in
+  let rec hh_aux i = function
+    | [] -> ([],[])
+    | h::t when i > 0 -> let l1,l2 = hh_aux (i-1) t in ({value=h.value; deg= h.deg-1}::l1,l2)
+    | l -> ([],l)
+  in
+  let rec algo = function
+    | [] -> failwith "impossible"
+    | [no] when no.deg = 0 -> ()
+    | [_] -> failwith "Invalid graph"
+    | h::t -> let (l1,l2) = hh_aux h.deg t in
+      let t' = fusion l1 l2 in
+      algo t';
+      List.iter (fun no -> g.(h.value).(no.value) <- true; g.(no.value).(h.value) <- true) l1
+  in algo nodes;
+  (g : graphe)
+;;
 
 (* let k () = (Random.int 500);; *)
 (* let tab_k = Array.make 500 k;; *)
@@ -188,4 +205,6 @@ let t = [| 85 ;50 ;54 ;54 ;36 ;69 ;17 ;22 ;15 ;54 ;13 ;9 ;15 ;10 ;22 ;8 ;31 ;11 
 let n = Array.length t;;
 let tab_k = Array.init n (fun i -> (fun () -> t.(i)));;
 let g = algorithm_3 tab_k;;
+let g' = havel_hakimi tab_k;;
 print_graph_degree g;;
+print_graph_degree g';;
